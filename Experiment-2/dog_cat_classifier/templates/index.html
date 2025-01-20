@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Dog Classifier</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #4A90E2;
+            margin-bottom: 20px;
+        }
+        input[type="file"], select, button {
+            padding: 12px 18px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin: 10px 0;
+            transition: border-color 0.3s ease;
+        }
+        input[type="file"] {
+            display: inline-block;
+        }
+        select {
+            width: 100%;
+        }
+        button {
+            background-color: #4A90E2;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357ABD;
+        }
+        #imagePreview {
+            max-width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: none;
+        }
+        .result {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Cat Dog Image Classifier</h2>
+        <input type="file" id="imageUpload" accept="image/*">
+        <select id="modelSelect">
+            <option value="logistic">Logistic Regression</option>
+            <option value="kmeans">K-means Clustering</option>
+            <option value="random_forest">Random Forest</option>
+        </select>
+        <img id="imagePreview" alt="Image preview">
+        <button onclick="predict()">Predict</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.style.display = 'block';
+            preview.src = URL.createObjectURL(e.target.files[0]);
+        });
+
+        function predict() {
+            const fileInput = document.getElementById('imageUpload');
+            const modelSelect = document.getElementById('modelSelect');
+            const resultDiv = document.getElementById('result');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('model', modelSelect.value);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.textContent = `Predicted: ${data.result}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultDiv.textContent = 'Error processing image';
+            });
+        }
+    </script>
+
+</body>
+</html>
