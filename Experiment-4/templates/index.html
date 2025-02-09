@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Q&A Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+    <div class="bg-gray-800 w-full h-screen shadow-lg flex flex-col p-6">
+        <h1 class="text-3xl font-bold text-center text-white mb-6">PDF Q&A Assistant</h1>
+        
+        <div class="flex flex-col flex-grow overflow-y-auto p-4 space-y-3 bg-gray-700 rounded-lg" id="chat-box">
+            <div class="text-gray-400 text-sm text-center">Start a conversation</div>
+        </div>
+        
+        <div class="mt-4 flex items-center gap-3">
+            <input type="file" id="pdfFile" accept=".pdf" class="hidden" onchange="uploadPDF()">
+            <label for="pdfFile" class="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition flex items-center gap-2">
+                <i class="fas fa-file-pdf"></i> Upload PDF
+            </label>
+            <input type="text" id="question" placeholder="Type a message..." class="flex-grow bg-gray-600 text-white p-2 rounded-lg focus:ring-2 focus:ring-blue-400">
+            <button onclick="askQuestion()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function appendMessage(content, isUser = true) {
+            const chatBox = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex items-center gap-2 p-3 rounded-lg max-w-[75%] ${isUser ? 'bg-blue-600 self-end' : 'bg-gray-600 self-start'}`;
+            
+            const icon = document.createElement('i');
+            icon.className = isUser ? 'fas fa-user-circle text-2xl' : 'fas fa-robot text-2xl';
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = content;
+            
+            if (isUser) {
+                msgDiv.appendChild(textSpan);
+                msgDiv.appendChild(icon);
+            } else {
+                msgDiv.appendChild(icon);
+                msgDiv.appendChild(textSpan);
+            }
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            if (!fileInput.files[0]) return;
+
+            appendMessage('📄 PDF uploaded', true);
+            const formData = new FormData();
+            formData.append('pdf', fileInput.files[0]);
+
+            await fetch('/upload', { method: 'POST', body: formData });
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById('question').value;
+            if (!question.trim()) return;
+
+            appendMessage(question, true);
+            document.getElementById('question').value = '';
+            
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question })
+            });
+            const result = await response.json();
+            appendMessage(result.answer || 'Error processing question', false);
+        }
+    </script>
+</body>
+</html>
