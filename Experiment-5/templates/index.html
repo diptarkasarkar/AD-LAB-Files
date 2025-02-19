@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Q&A System</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --secondary-text: #a0a0a0;
+            --accent-color: #4e6fff;
+            --input-bg: #2d2d2d;
+            --border-color: #333333;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .chat-interface {
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+        }
+        
+        .url-input {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--secondary-text);
+            font-weight: bold;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        
+        .chat-window {
+            flex-grow: 1;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background-color: var(--accent-color);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .response-message {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        textarea {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 16px;
+            resize: none;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #3a5ae8;
+        }
+        
+        button:disabled {
+            background-color: #4a4a4a;
+            color: #7a7a7a;
+        }
+        
+        .loading {
+            text-align: center;
+            display: none;
+            color: var(--secondary-text);
+            padding: 10px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 10px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--secondary-text);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: pulse 1.5s infinite;
+            opacity: 0.6;
+        }
+        
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Content Q&A System</h1>
+        
+        <div class="chat-interface">
+            <div class="url-input">
+                <label for="url">Website URL:</label>
+                <input type="text" id="url" placeholder="Enter website URL (e.g., https://example.com)">
+            </div>
+            
+            <div class="chat-window" id="chatWindow">
+                <!-- Messages will appear here -->
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="typing-indicator">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <textarea id="question" rows="2" placeholder="Ask a question about the website content"></textarea>
+                <button onclick="processQuestion()" id="submitBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function processQuestion() {
+            const url = document.getElementById('url').value;
+            const question = document.getElementById('question').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const chatWindow = document.getElementById('chatWindow');
+
+            if (!url || !question) {
+                alert('Please enter both URL and question');
+                return;
+            }
+
+            // Add user message to chat
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user-message';
+            userMessageDiv.textContent = question;
+            chatWindow.appendChild(userMessageDiv);
+            
+            // Clear input
+            document.getElementById('question').value = '';
+            
+            // Scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, question })
+                });
+
+                const data = await response.json();
+                const responseMessageDiv = document.createElement('div');
+                responseMessageDiv.className = 'message response-message';
+                
+                if (data.error) {
+                    responseMessageDiv.innerHTML = `Error: ${data.error}`;
+                    responseMessageDiv.style.color = '#ff6b6b';
+                } else {
+                    responseMessageDiv.innerHTML = data.response;
+                }
+                
+                loading.style.display = 'none';
+                chatWindow.appendChild(responseMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+            } catch (error) {
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'message response-message';
+                errorMessageDiv.innerHTML = `Error: ${error.message}`;
+                errorMessageDiv.style.color = '#ff6b6b';
+                
+                chatWindow.appendChild(errorMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Enable Enter key to send messages
+        document.getElementById('question').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                processQuestion();
+            }
+        });
+    </script>
+</body>
+</html>
