@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Natural Language Database Interaction with LLMs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-hover: #6d28d9;
+            --background-color: #0f172a;
+            --card-background: #1e293b;
+            --card-hover: #334155;
+            --text-color: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --border-radius: 12px;
+            --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.25), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --sql-bg: #1e1b4b;
+            --error-bg: #450a0a;
+            --error-border: #7f1d1d;
+            --table-header: #1e293b;
+            --table-row: #1e293b;
+            --table-row-hover: #334155;
+            --table-border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+            text-align: center;
+            background: linear-gradient(90deg, #7c3aed, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .query-card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+        }
+
+        .query-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.25), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            background: var(--card-hover);
+        }
+
+        .query-input {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--background-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            resize: vertical;
+            font-family: inherit;
+            color: var(--text-color);
+        }
+
+        .query-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .sql-query {
+            background-color: var(--sql-bg);
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .error {
+            background-color: var(--error-bg);
+            color: #fca5a5;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--error-border);
+            box-shadow: var(--shadow);
+        }
+
+        .results-table {
+            width: 100%;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            background-color: var(--table-header);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--table-border);
+        }
+
+        .results-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--table-border);
+            color: var(--text-secondary);
+        }
+
+        .results-table tr {
+            background-color: var(--table-row);
+            transition: background-color 0.2s ease;
+        }
+
+        .results-table tr:hover {
+            background-color: var(--table-row-hover);
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .query-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Animation for new results */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-table {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--card-background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Natural Language Database Interaction with LLMs</h1>
+        
+        <div class="query-card">
+            <form method="POST">
+                <textarea 
+                    name="natural_query" 
+                    class="query-input" 
+                    rows="3" 
+                    placeholder="Enter your query in natural language (e.g., 'show restaurants with rating above 4 stars')"
+                >{{ natural_query }}</textarea>
+                <button type="submit" class="submit-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Submit Query
+                </button>
+            </form>
+        </div>
+
+        {% if sql_query %}
+        <div class="sql-query">
+            <strong>Generated SQL Query:</strong><br>
+            {{ sql_query }}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if results %}
+            {% if results|length > 0 %}
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for column in results[0].keys() %}
+                            <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="no-results">No results found for your query.</div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
