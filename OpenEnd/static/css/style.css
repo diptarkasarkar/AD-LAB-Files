@@ -1,0 +1,46 @@
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6B7280;
+}
+
+/* Chat container styling */
+#chat-container {
+    scrollbar-width: thin;
+    scrollbar-color: #4B5563 #374151;
+}
+
+.chat-message {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Add this to your CSS */
+.message {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+.message ul {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding-left: 20px;
+}
+.message li {
+    margin-bottom: 8px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
